@@ -1,12 +1,61 @@
-<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>My Portfolio</title>
-</head>
-<body>
-  <h1>Hello — my site is working</h1>
-  <p>This page is being served by GitHub Pages.</p>
-  <p>If you can see this, everything is set up correctly.</p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Utah Legacy Films | Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background-color: #f5f2eb;
+        color: #362b24;
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+      }
+      header, footer { background-color: #362b24; color: #faf9f6; padding: 1rem; text-align: center; }
+      nav a { color: #faf9f6; margin: 0 1rem; text-decoration: none; font-weight: bold; }
+      nav a:hover { text-decoration: underline; }
+      .portfolio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 2rem; }
+      .project { background-color: #e8e2d9; padding: 1rem; border-radius: 8px; text-align: center; }
+      .project img { width: 100%; height: auto; border-radius: 4px; margin-bottom: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <h1 class="text-3xl font-serif">Utah Legacy Films</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="about.html">About</a>
+        <a href="process.html">Process</a>
+      </nav>
+    </header>
+
+    <!-- Portfolio Section -->
+    <section class="portfolio-grid">
+      <div class="project">
+        <img src="images/project1.jpg" alt="Project 1">
+        <p>Project 1 Title</p>
+      </div>
+      <div class="project">
+        <img src="images/project2.jpg" alt="Project 2">
+        <p>Project 2 Title</p>
+      </div>
+      <div class="project">
+        <img src="images/project3.jpg" alt="Project 3">
+        <p>Project 3 Title</p>
+      </div>
+      <!-- Add more projects as needed -->
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>Contact: your.email@example.com | Instagram | LinkedIn</p>
+    </footer>
+  </body>
 </html>
