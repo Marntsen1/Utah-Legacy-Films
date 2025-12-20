@@ -1,0 +1,147 @@
+{
+  "name": "Utah Legacy Films - Free Questions Form",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "free-questions",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-free-questions",
+      "name": "Webhook - Free Questions",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "free-questions"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "name",
+              "name": "Name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "phone",
+              "name": "Phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "recipient",
+              "name": "Recipient",
+              "value": "={{ $json.body.recipient }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "Timestamp",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "source",
+              "name": "Source",
+              "value": "={{ $json.body.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-data",
+      "name": "Set Form Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "New Free Questions Request - {{ $json.Name }}",
+        "emailType": "html",
+        "message": "<h2>New Free Questions Request</h2><p><strong>Name:</strong> {{ $json.Name }}</p><p><strong>Email:</strong> {{ $json.Email }}</p><p><strong>Phone:</strong> {{ $json.Phone }}</p><p><strong>Interview For:</strong> {{ $json.Recipient }}</p><p><strong>Submitted:</strong> {{ $json.Timestamp }}</p><p><strong>Source:</strong> {{ $json.Source }}</p>",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [650, 300],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Thank you! We'll send your free list of interview questions shortly.\" } }}",
+        "options": {}
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Free Questions": {
+      "main": [
+        [
+          {
+            "node": "Set Form Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Form Data": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Notification": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-17T00:00:00.000Z",
+  "versionId": "1"
+}
+

@@ -1,0 +1,159 @@
+{
+  "name": "Utah Legacy Films - Booking Request",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-booking",
+      "name": "Webhook - Booking Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "booking-request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "name",
+              "name": "Name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "preferredMonth",
+              "name": "Preferred Month",
+              "value": "={{ $json.body.preferredMonth }}",
+              "type": "string"
+            },
+            {
+              "id": "package",
+              "name": "Package",
+              "value": "={{ $json.body.package }}",
+              "type": "string"
+            },
+            {
+              "id": "packageId",
+              "name": "Package ID",
+              "value": "={{ $json.body.packageId }}",
+              "type": "string"
+            },
+            {
+              "id": "packagePrice",
+              "name": "Package Price",
+              "value": "={{ $json.body.packagePrice }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "Timestamp",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "source",
+              "name": "Source",
+              "value": "={{ $json.body.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-booking-data",
+      "name": "Set Booking Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "New Booking Request - {{ $json.Package }} - {{ $json.Name }}",
+        "emailType": "html",
+        "message": "<h2>New Booking Request</h2><p><strong>Name:</strong> {{ $json.Name }}</p><p><strong>Email:</strong> {{ $json.Email }}</p><p><strong>Preferred Month:</strong> {{ $json.PreferredMonth }}</p><p><strong>Package:</strong> {{ $json.Package }} ({{ $json.PackagePrice }})</p><p><strong>Package ID:</strong> {{ $json.PackageId }}</p><p><strong>Submitted:</strong> {{ $json.Timestamp }}</p><p><strong>Source:</strong> {{ $json.Source }}</p>",
+        "options": {}
+      },
+      "id": "send-booking-email",
+      "name": "Send Booking Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [650, 300],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Booking request received. We will be in touch within 24 hours.\" } }}",
+        "options": {}
+      },
+      "id": "respond-booking",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Booking Request": {
+      "main": [
+        [
+          {
+            "node": "Set Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Send Booking Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Booking Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-17T00:00:00.000Z",
+  "versionId": "1"
+}
+
