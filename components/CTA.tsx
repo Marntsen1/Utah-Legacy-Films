@@ -65,10 +65,12 @@ const CTA: React.FC = () => {
     setFormState('submitting');
     
     try {
-      // Get webhook URL from environment variable
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_CTA;
+      // Get webhook URL from environment variable or use fallback
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_CTA || 'https://mattarntsen.app.n8n.cloud/webhook-test/free-questions';
       
-      if (!webhookUrl) {
+      console.log('CTA Webhook URL:', webhookUrl); // Debug log
+      
+      if (!webhookUrl || webhookUrl === 'undefined') {
         throw new Error('Webhook URL not configured');
       }
 

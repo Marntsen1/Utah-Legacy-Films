@@ -120,12 +120,13 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
               setError(null);
 
               try {
-                // Get webhook URL from environment variable
-                const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING;
+                // Get webhook URL from environment variable or use fallback
+                const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
                 
                 console.log('Webhook URL:', webhookUrl); // Debug log
+                console.log('All env vars:', import.meta.env); // Debug all env vars
                 
-                if (!webhookUrl) {
+                if (!webhookUrl || webhookUrl === 'undefined') {
                   console.error('Webhook URL not found in environment variables');
                   throw new Error('Webhook URL not configured. Please check environment variables.');
                 }
