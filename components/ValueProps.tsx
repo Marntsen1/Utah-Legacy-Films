@@ -75,9 +75,10 @@ const ValueProps: React.FC = () => {
                <img 
                   src="/family-watching.png" 
                   alt="Family of four watching their legacy film together on the TV, with elderly couple displayed on screen" 
-                  className="w-full h-auto rounded-2xl transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-auto rounded-2xl transition-transform duration-700 group-hover:scale-105 block"
                   loading="lazy"
                   decoding="async"
+                  style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
                />
                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20">
                  <div className="bg-[#362b24]/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-[#362b24]/20">

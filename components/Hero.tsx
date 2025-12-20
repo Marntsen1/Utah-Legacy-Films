@@ -142,9 +142,10 @@ const Hero: React.FC = () => {
             <img 
               src="/interview-setup.png" 
               alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
-              className="w-full h-auto rounded-2xl transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-auto rounded-2xl transition-transform duration-700 group-hover:scale-105 block"
               loading="lazy"
               decoding="async"
+              style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
             />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20">
               <div className="bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
