@@ -134,23 +134,18 @@ const Hero: React.FC = () => {
         </Reveal>
       </div>
 
-      {/* 2. VISUAL ANCHOR: Static Cinematic Image */}
+      {/* 2. VISUAL ANCHOR: Interview Setup Image */}
       <Reveal delay={0.6} width="100%">
-        <div className="relative w-full max-w-6xl mx-auto z-10">
-           <div className="relative rounded-3xl overflow-hidden">
-             <img 
-                src="/interview-setup.png" 
-                alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
-                className="w-full h-auto object-contain rounded-3xl"
-                loading="lazy"
-                decoding="async"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  // Fallback to placeholder if image not found
-                  target.src = 'https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
-                }}
-             />
-           </div>
+        <div className="relative w-full max-w-6xl mx-auto z-10 mt-8">
+          <div className="relative rounded-3xl overflow-hidden bg-[#f5f2eb] p-4">
+            <img 
+              src="/interview-setup.png" 
+              alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
+              className="w-full h-auto rounded-2xl"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
         </div>
       </Reveal>
 

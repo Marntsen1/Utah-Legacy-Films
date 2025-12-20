@@ -68,20 +68,15 @@ const ValueProps: React.FC = () => {
             </p>
           </Reveal>
 
-          {/* Centered Image Visual */}
+          {/* Centered Image Visual - Family Watching */}
           <Reveal delay={0.3} width="100%">
-             <div className="w-full max-w-3xl mx-auto relative rounded-3xl overflow-hidden">
+             <div className="w-full max-w-3xl mx-auto relative rounded-3xl overflow-hidden bg-[#f5f2eb] p-4">
                <img 
                   src="/family-watching.png" 
                   alt="Family of four watching their legacy film together on the TV, with elderly couple displayed on screen" 
-                  className="w-full h-auto object-contain rounded-3xl"
+                  className="w-full h-auto rounded-2xl"
                   loading="lazy"
                   decoding="async"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    // Fallback to placeholder if image not found
-                    target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
-                  }}
                />
              </div>
           </Reveal>
