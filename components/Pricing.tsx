@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import { Reveal } from './ui/Reveal';
 import Button from './ui/Button';
+import CalendarPicker from './ui/CalendarPicker';
 
 interface Package {
   id: string;
@@ -68,7 +69,8 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
   const [bookingData, setBookingData] = useState({
     name: '',
     email: '',
-    month: 'As soon as possible'
+    selectedDate: null as Date | null,
+    selectedTime: ''
   });
   const [error, setError] = useState<string | null>(null);
   
@@ -86,13 +88,13 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="relative bg-[#f5f2eb] w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl shadow-black/20 border border-[#362b24]/10"
+        className="relative bg-[#f5f2eb] w-full max-w-lg max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl shadow-black/20 border border-[#362b24]/10 flex flex-col"
       >
         <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-[#362b24]/5 rounded-full transition-colors">
           <X className="w-5 h-5 text-[#85756b]" />
         </button>
 
-        <div className="p-8">
+        <div className="p-8 overflow-y-auto flex-1">
           <div className="mb-6">
             <span className="text-xs font-bold tracking-wider text-[#c06e46] uppercase">Booking Request</span>
             <h3 className="font-serif text-3xl text-[#362b24] mt-1">{pkg.name}</h3>
@@ -109,6 +111,11 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 return;
               }
 
+              if (!bookingData.selectedDate || !bookingData.selectedTime) {
+                setError('Please select a date and time for your booking');
+                return;
+              }
+
               setIsSubmitting(true);
               setError(null);
 
@@ -116,9 +123,36 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 // Get webhook URL from environment variable
                 const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING;
                 
+                console.log('Webhook URL:', webhookUrl); // Debug log
+                
                 if (!webhookUrl) {
-                  throw new Error('Webhook URL not configured');
+                  console.error('Webhook URL not found in environment variables');
+                  throw new Error('Webhook URL not configured. Please check environment variables.');
                 }
+
+                // Format date and time
+                const bookingDateTime = new Date(bookingData.selectedDate);
+                const [time, period] = bookingData.selectedTime.split(' ');
+                const [hours, minutes] = time.split(':');
+                let hour24 = parseInt(hours);
+                if (period === 'PM' && hour24 !== 12) hour24 += 12;
+                if (period === 'AM' && hour24 === 12) hour24 = 0;
+                bookingDateTime.setHours(hour24, parseInt(minutes), 0, 0);
+
+                const payload = {
+                  name: bookingData.name,
+                  email: bookingData.email,
+                  selectedDate: bookingData.selectedDate.toISOString().split('T')[0],
+                  selectedTime: bookingData.selectedTime,
+                  bookingDateTime: bookingDateTime.toISOString(),
+                  package: pkg.name,
+                  packageId: pkg.id,
+                  packagePrice: pkg.price,
+                  timestamp: new Date().toISOString(),
+                  source: 'Booking Request Form',
+                };
+
+                console.log('Sending payload:', payload); // Debug log
 
                 // Send data to n8n webhook
                 const response = await fetch(webhookUrl, {
@@ -126,27 +160,27 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   headers: {
                     'Content-Type': 'application/json',
                   },
-                  body: JSON.stringify({
-                    name: bookingData.name,
-                    email: bookingData.email,
-                    preferredMonth: bookingData.month,
-                    package: pkg.name,
-                    packageId: pkg.id,
-                    packagePrice: pkg.price,
-                    timestamp: new Date().toISOString(),
-                    source: 'Booking Request Form',
-                  }),
+                  body: JSON.stringify(payload),
                 });
 
+                console.log('Response status:', response.status); // Debug log
+                console.log('Response ok:', response.ok); // Debug log
+
                 if (!response.ok) {
-                  throw new Error(`HTTP error! status: ${response.status}`);
+                  const errorText = await response.text();
+                  console.error('Error response:', errorText);
+                  throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
                 }
+
+                const responseData = await response.json().catch(() => ({}));
+                console.log('Response data:', responseData); // Debug log
 
                 // Move to success step
                 setStep(2);
               } catch (error) {
                 console.error('Booking submission error:', error);
-                setError('Failed to submit booking request. Please try again or contact us directly.');
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                setError(`Failed to submit booking request: ${errorMessage}. Please try again or contact us directly.`);
               } finally {
                 setIsSubmitting(false);
               }
@@ -186,22 +220,28 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   placeholder="jane@example.com" 
                 />
               </div>
+              {/* Calendar and Time Selection */}
               <div>
-                <label htmlFor="booking-month" className="block text-xs font-medium text-[#362b24] uppercase tracking-wide mb-1.5">
-                  Preferred Month
+                <label className="block text-xs font-medium text-[#362b24] uppercase tracking-wide mb-2">
+                  Select Date & Time <span className="text-[#c06e46]">*</span>
                 </label>
-                <select 
-                  id="booking-month"
-                  value={bookingData.month}
-                  onChange={(e) => setBookingData({ ...bookingData, month: e.target.value })}
-                  className="w-full bg-white border border-[#362b24]/10 rounded-xl px-4 py-3 text-[#362b24] focus:outline-none focus:border-[#c06e46] focus:ring-1 focus:ring-[#c06e46]/20 transition-colors"
-                  aria-label="Preferred booking month"
-                >
-                  <option>As soon as possible</option>
-                  <option>Next month</option>
-                  <option>In 3 months</option>
-                  <option>Flexible</option>
-                </select>
+                <CalendarPicker
+                  selectedDate={bookingData.selectedDate}
+                  selectedTime={bookingData.selectedTime}
+                  onDateSelect={(date) => {
+                    setBookingData({ ...bookingData, selectedDate: date, selectedTime: '' });
+                    setError(null);
+                  }}
+                  onTimeSelect={(time) => {
+                    setBookingData({ ...bookingData, selectedTime: time });
+                    setError(null);
+                  }}
+                />
+                {bookingData.selectedDate && bookingData.selectedTime && (
+                  <p className="mt-2 text-sm text-[#85756b]">
+                    Selected: {bookingData.selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {bookingData.selectedTime}
+                  </p>
+                )}
               </div>
               
               <div className="pt-4">
