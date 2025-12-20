@@ -28,9 +28,11 @@
 2. Add your webhook URLs:
 
 ```env
-VITE_N8N_WEBHOOK_CTA=https://your-n8n-instance.com/webhook/free-questions
-VITE_N8N_WEBHOOK_BOOKING=https://your-n8n-instance.com/webhook/booking-request
+VITE_N8N_WEBHOOK_CTA=https://mattarntsen.app.n8n.cloud/webhook-test/free-questions
+VITE_N8N_WEBHOOK_BOOKING=https://mattarntsen.app.n8n.cloud/webhook-test/booking-request
 ```
+
+**Note**: The `.env.local` file has been created with your booking webhook URL. You'll need to add the free questions webhook URL once you create that workflow.
 
 3. **Important**: Restart your dev server after adding environment variables:
    ```bash
