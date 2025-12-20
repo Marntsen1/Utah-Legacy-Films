@@ -70,11 +70,11 @@ const ValueProps: React.FC = () => {
 
           {/* Centered Image Visual */}
           <Reveal delay={0.3} width="100%">
-             <div className="w-full max-w-3xl mx-auto aspect-[16/9] relative rounded-3xl overflow-hidden shadow-2xl shadow-[#362b24]/10 border border-[#362b24]/10 group">
+             <div className="w-full max-w-3xl mx-auto relative rounded-3xl overflow-hidden">
                <img 
                   src="/family-watching.png" 
                   alt="Family of four watching their legacy film together on the TV, with elderly couple displayed on screen" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-auto object-contain rounded-3xl"
                   loading="lazy"
                   decoding="async"
                   onError={(e) => {
@@ -83,7 +83,6 @@ const ValueProps: React.FC = () => {
                     target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
                   }}
                />
-               <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-3xl pointer-events-none" />
              </div>
           </Reveal>
         </div>

@@ -141,7 +141,7 @@ const Hero: React.FC = () => {
              <img 
                 src="/interview-setup.png" 
                 alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
-                className="w-full h-full object-cover"
+                className="w-full h-auto object-contain rounded-3xl"
                 loading="lazy"
                 decoding="async"
                 onError={(e) => {
