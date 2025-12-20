@@ -192,7 +192,7 @@ const Pricing: React.FC = () => {
     switch (id) {
         case 'essential':
             return {
-                card: "bg-white border border-[#362b24]/10 hover:shadow-xl hover:border-[#c06e46]/30 hover:-translate-y-2 scale-[1.02] z-0",
+                card: "bg-white border border-[#362b24]/10 hover:shadow-xl hover:border-[#c06e46]/30 hover:-translate-y-2",
                 title: "text-[#362b24]",
                 price: "text-[#362b24]",
                 desc: "text-[#85756b]",
@@ -204,7 +204,7 @@ const Pricing: React.FC = () => {
             };
         case 'signature': // Reverted to Dark Brown with explicitly defined corners
             return {
-                card: "bg-[#362b24] text-[#f5f2eb] rounded-3xl overflow-hidden shadow-2xl shadow-black/20 scale-110 z-10 border border-[#4a3e36] hover:-translate-y-2",
+                card: "bg-[#362b24] text-[#f5f2eb] rounded-3xl overflow-hidden shadow-2xl shadow-black/20 z-10 border border-[#4a3e36] hover:-translate-y-2",
                 title: "text-[#f5f2eb]",
                 price: "text-[#f5f2eb]",
                 desc: "text-[#a89b91]",
@@ -216,7 +216,7 @@ const Pricing: React.FC = () => {
             };
         case 'masterpiece': // Premium Deep Navy & Gold
             return {
-                card: "bg-[#16213e] text-[#f5f2eb] border border-[#16213e] hover:shadow-2xl hover:shadow-[#16213e]/30 hover:-translate-y-2 scale-[1.02] z-0", 
+                card: "bg-[#16213e] text-[#f5f2eb] border border-[#16213e] hover:shadow-2xl hover:shadow-[#16213e]/30 hover:-translate-y-2", 
                 title: "text-[#f5f2eb]",
                 price: "text-[#d6ad60]", // Gold
                 desc: "text-[#94a3b8]", // Blue-grey
