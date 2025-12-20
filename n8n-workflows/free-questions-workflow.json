@@ -90,7 +90,24 @@
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ { \"success\": true, \"message\": \"Thank you! We'll send your free list of interview questions shortly.\" } }}",
-        "options": {}
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
       },
       "id": "respond-to-webhook",
       "name": "Respond to Webhook",

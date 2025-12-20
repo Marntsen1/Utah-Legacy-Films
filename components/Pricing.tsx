@@ -158,6 +158,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 // Send data to n8n webhook
                 const response = await fetch(webhookUrl, {
                   method: 'POST',
+                  mode: 'cors', // Explicitly enable CORS
                   headers: {
                     'Content-Type': 'application/json',
                   },
