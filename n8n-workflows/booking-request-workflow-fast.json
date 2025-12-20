@@ -1,0 +1,203 @@
+{
+  "name": "Utah Legacy Films - Booking Request (Fast Response)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-booking",
+      "name": "Webhook - Booking Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "booking-request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "name",
+              "name": "Name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "selectedDate",
+              "name": "Selected Date",
+              "value": "={{ $json.body.selectedDate }}",
+              "type": "string"
+            },
+            {
+              "id": "selectedTime",
+              "name": "Selected Time",
+              "value": "={{ $json.body.selectedTime }}",
+              "type": "string"
+            },
+            {
+              "id": "bookingDateTime",
+              "name": "Booking DateTime",
+              "value": "={{ $json.body.bookingDateTime }}",
+              "type": "string"
+            },
+            {
+              "id": "package",
+              "name": "Package",
+              "value": "={{ $json.body.package }}",
+              "type": "string"
+            },
+            {
+              "id": "packageId",
+              "name": "Package ID",
+              "value": "={{ $json.body.packageId }}",
+              "type": "string"
+            },
+            {
+              "id": "packagePrice",
+              "name": "Package Price",
+              "value": "={{ $json.body.packagePrice }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "Timestamp",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "source",
+              "name": "Source",
+              "value": "={{ $json.body.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-booking-data",
+      "name": "Set Booking Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Booking request received. We will be in touch within 24 hours.\" } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-booking",
+      "name": "Respond to Webhook (Immediate)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "New Booking Request - {{ $json.Package }} - {{ $json.Name }}",
+        "emailType": "html",
+        "message": "<h2>New Booking Request</h2><p><strong>Name:</strong> {{ $json.Name }}</p><p><strong>Email:</strong> {{ $json.Email }}</p><p><strong>Selected Date:</strong> {{ $json.SelectedDate }}</p><p><strong>Selected Time:</strong> {{ $json.SelectedTime }}</p><p><strong>Booking DateTime:</strong> {{ $json.BookingDateTime }}</p><p><strong>Package:</strong> {{ $json.Package }} ({{ $json.PackagePrice }})</p><p><strong>Package ID:</strong> {{ $json.PackageId }}</p><p><strong>Submitted:</strong> {{ $json.Timestamp }}</p><p><strong>Source:</strong> {{ $json.Source }}</p>",
+        "options": {}
+      },
+      "id": "send-booking-email",
+      "name": "Send Booking Email (Async)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [850, 300],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "fileName": "bookings.csv",
+        "dataPropertyName": "data",
+        "options": {
+          "fileContent": "={{ $json.Name }},{{ $json.Email }},{{ $json.SelectedDate }},{{ $json.SelectedTime }},{{ $json.BookingDateTime }},{{ $json.Package }},{{ $json.PackageId }},{{ $json.PackagePrice }},{{ $json.Timestamp }}\n"
+        }
+      },
+      "id": "save-to-file",
+      "name": "Save to File (for daily summary)",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [850, 450],
+      "notes": "Stores booking data for daily summary"
+    }
+  ],
+  "connections": {
+    "Webhook - Booking Request": {
+      "main": [
+        [
+          {
+            "node": "Set Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Immediate)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Booking Email (Async)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to File (for daily summary)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-20T00:00:00.000Z",
+  "versionId": "2"
+}
+

@@ -1,0 +1,216 @@
+{
+  "name": "Utah Legacy Films - Daily Booking Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 17 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger (5pm Daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "notes": "Runs daily at 5:00 PM"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileName": "bookings.csv",
+        "options": {}
+      },
+      "id": "read-bookings",
+      "name": "Read Bookings File",
+      "type": "n8n-nodes-base.readFile",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse CSV and format for email\nconst csv = $input.first().json.data || '';\nconst lines = csv.trim().split('\\n').filter(line => line.trim());\n\n// Skip header if exists\nconst dataLines = lines.filter(line => !line.includes('Name,Email'));\n\nif (dataLines.length === 0) {\n  return [{ json: { hasBookings: false, message: 'No bookings today.' } }];\n}\n\n// Parse CSV lines\nconst bookings = dataLines.map(line => {\n  const [name, email, selectedDate, selectedTime, bookingDateTime, packageName, packageId, packagePrice, timestamp] = line.split(',');\n  return {\n    name: name || 'N/A',\n    email: email || 'N/A',\n    selectedDate: selectedDate || 'N/A',\n    selectedTime: selectedTime || 'N/A',\n    bookingDateTime: bookingDateTime || 'N/A',\n    package: packageName || 'N/A',\n    packageId: packageId || 'N/A',\n    packagePrice: packagePrice || 'N/A',\n    timestamp: timestamp || 'N/A'\n  };\n});\n\n// Filter today's bookings\nconst today = new Date().toISOString().split('T')[0];\nconst todayBookings = bookings.filter(b => b.selectedDate === today || b.timestamp.startsWith(today));\n\nreturn [{\n  json: {\n    hasBookings: todayBookings.length > 0,\n    totalBookings: todayBookings.length,\n    allBookings: bookings.length,\n    bookings: todayBookings.length > 0 ? todayBookings : bookings,\n    date: today\n  }\n}];"
+      },
+      "id": "process-bookings",
+      "name": "Process Bookings Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-bookings",
+              "leftValue": "={{ $json.hasBookings }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-bookings",
+      "name": "Check if Bookings Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "html-table",
+              "name": "HTML Table",
+              "value": "={{ '<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse: collapse; width: 100%;\"><thead><tr style=\"background-color: #362b24; color: white;\"><th>Name</th><th>Email</th><th>Date</th><th>Time</th><th>Package</th><th>Price</th><th>Submitted</th></tr></thead><tbody>' + $json.bookings.map(b => '<tr><td>' + b.name + '</td><td>' + b.email + '</td><td>' + b.selectedDate + '</td><td>' + b.selectedTime + '</td><td>' + b.package + '</td><td>' + b.packagePrice + '</td><td>' + new Date(b.timestamp).toLocaleString() + '</td></tr>').join('') + '</tbody></table>' }}",
+              "type": "string"
+            },
+            {
+              "id": "summary-text",
+              "name": "Summary Text",
+              "value": "={{ 'Total bookings today: ' + $json.totalBookings + '\\n\\nAll bookings received: ' + $json.allBookings }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-email",
+      "name": "Format Email Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "Daily Booking Summary - {{ $json.totalBookings }} New Booking(s) Today",
+        "emailType": "html",
+        "message": "<h2>Daily Booking Summary</h2><p><strong>Date:</strong> {{ $json.date }}</p><p><strong>Total Bookings Today:</strong> {{ $json.totalBookings }}</p><p><strong>All Bookings Received:</strong> {{ $json.allBookings }}</p><h3>Booking Details:</h3>{{ $json.HTMLTable }}<p style=\"margin-top: 20px; color: #85756b; font-size: 12px;\">This is an automated daily summary from Utah Legacy Films booking system.</p>",
+        "options": {}
+      },
+      "id": "send-summary-email",
+      "name": "Send Summary Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1250, 200],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "Daily Booking Summary - No Bookings Today",
+        "emailType": "html",
+        "message": "<h2>Daily Booking Summary</h2><p><strong>Date:</strong> {{ $json.date }}</p><p>No new bookings were received today.</p>",
+        "options": {}
+      },
+      "id": "send-no-bookings-email",
+      "name": "Send No Bookings Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1050, 400],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (5pm Daily)": {
+      "main": [
+        [
+          {
+            "node": "Read Bookings File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Bookings File": {
+      "main": [
+        [
+          {
+            "node": "Process Bookings Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Bookings Data": {
+      "main": [
+        [
+          {
+            "node": "Check if Bookings Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Bookings Exist": {
+      "main": [
+        [
+          {
+            "node": "Format Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send No Bookings Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-20T00:00:00.000Z",
+  "versionId": "1"
+}
+
