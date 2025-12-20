@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Preserve your family's legacy with cinematic documentary-grade interviews. Professional video production in Utah capturing the stories, voices, and wisdom of your loved ones for generations to come." />
+    <meta name="keywords" content="family legacy videos, documentary interviews, Utah video production, family history, legacy films, cinematic interviews, family storytelling" />
+    <meta name="author" content="Utah Legacy Films" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://utahlegacyfilms.com/" />
+    <meta property="og:title" content="Utah Legacy Films | Cinematic Family Stories" />
+    <meta property="og:description" content="Preserve your family's legacy with cinematic documentary-grade interviews. Professional video production in Utah." />
+    <meta property="og:image" content="https://utahlegacyfilms.com/og-image.jpg" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://utahlegacyfilms.com/" />
+    <meta property="twitter:title" content="Utah Legacy Films | Cinematic Family Stories" />
+    <meta property="twitter:description" content="Preserve your family's legacy with cinematic documentary-grade interviews. Professional video production in Utah." />
+    <meta property="twitter:image" content="https://utahlegacyfilms.com/og-image.jpg" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    
+    <title>Utah Legacy Films | Cinematic Family Stories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: '#f5f2eb', // Warm Bone/Paper
+              surface: '#e8e2d9', // Darker Beige
+              primary: '#362b24', // Deep Espresso/Walnut (Replaces Forest Green)
+              secondary: '#85756b', // Warm Taupe (Replaces Sage)
+              accent: '#c06e46', // Terracotta/Clay (Replaces Red)
+              light: '#faf9f6', // Off-white
+              gold: '#d6ad60', // Soft Gold
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            },
+            animation: {
+              'blob': 'blob 7s infinite',
+              'shimmer': 'shimmer 2s linear infinite',
+            },
+            keyframes: {
+              blob: {
+                '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                '100%': { transform: 'translate(0px, 0px) scale(1)' },
+              },
+              shimmer: {
+                from: { backgroundPosition: '0 0' },
+                to: { backgroundPosition: '-200% 0' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #f5f2eb;
+        color: #362b24;
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f5f2eb;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #85756b;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #c06e46;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "framer-motion": "https://esm.sh/framer-motion@^12.23.26",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Utah Legacy Films",
+      "description": "Professional cinematic video production service for capturing family legacies and stories in Utah",
+      "url": "https://utahlegacyfilms.com",
+      "telephone": "+1-801-XXX-XXXX",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Utah",
+        "addressRegion": "UT",
+        "addressCountry": "US"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "40.7608",
+        "longitude": "-111.8910"
+      },
+      "priceRange": "$$$",
+      "image": "https://utahlegacyfilms.com/og-image.jpg",
+      "sameAs": [
+        "https://www.facebook.com/utahlegacyfilms",
+        "https://www.instagram.com/utahlegacyfilms"
+      ],
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Essential Legacy",
+          "price": "2000",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Signature Story",
+          "price": "4500",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Generational Masterpiece",
+          "price": "8000",
+          "priceCurrency": "USD"
+        }
+      ]
+    }
+    </script>
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
