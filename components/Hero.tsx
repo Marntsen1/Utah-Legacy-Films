@@ -140,11 +140,16 @@ const Hero: React.FC = () => {
            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-[#362b24]/20 border border-[#362b24]/10 bg-[#362b24]">
              <div className="aspect-[16/9] md:aspect-[21/9] relative group">
                <img 
-                  src="https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80" 
-                  alt="Cinematic interview setting in a warm living room with professional lighting" 
+                  src="/interview-setup.png" 
+                  alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
                   className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
                   loading="lazy"
                   decoding="async"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    // Fallback to placeholder if image not found
+                    target.src = 'https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
+                  }}
                />
                
                {/* Overlay Gradient */}
