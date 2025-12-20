@@ -137,36 +137,19 @@ const Hero: React.FC = () => {
       {/* 2. VISUAL ANCHOR: Static Cinematic Image */}
       <Reveal delay={0.6} width="100%">
         <div className="relative w-full max-w-6xl mx-auto z-10">
-           <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-[#362b24]/20 border border-[#362b24]/10 bg-[#362b24]">
-             <div className="aspect-[16/9] md:aspect-[21/9] relative group">
-               <img 
-                  src="/interview-setup.png" 
-                  alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    // Fallback to placeholder if image not found
-                    target.src = 'https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
-                  }}
-               />
-               
-               {/* Overlay Gradient */}
-               <div className="absolute inset-0 bg-gradient-to-t from-[#362b24]/40 via-transparent to-transparent pointer-events-none" />
-               
-               {/* Play Button Overlay (Optional hint that it's video-related) */}
-               <button 
-                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-75 group-hover:scale-100"
-                 aria-label="Play hero video"
-                 onClick={() => {
-                   // Add video modal or link to video here
-                   console.log('Play hero video clicked');
-                 }}
-               >
-                  <Play className="w-8 h-8 text-white fill-white/80" />
-               </button>
-             </div>
+           <div className="relative rounded-3xl overflow-hidden">
+             <img 
+                src="/interview-setup.png" 
+                alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  // Fallback to placeholder if image not found
+                  target.src = 'https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
+                }}
+             />
            </div>
         </div>
       </Reveal>
