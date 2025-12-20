@@ -65,8 +65,33 @@ const CTA: React.FC = () => {
     setFormState('submitting');
     
     try {
-      // Simulate network request - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Get webhook URL from environment variable
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_CTA;
+      
+      if (!webhookUrl) {
+        throw new Error('Webhook URL not configured');
+      }
+
+      // Send data to n8n webhook
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || 'Not provided',
+          recipient: formData.recipient,
+          timestamp: new Date().toISOString(),
+          source: 'Free Questions Form',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       setFormState('success');
       // Reset form
       setFormData({ name: '', email: '', phone: '', recipient: '' });
@@ -74,7 +99,10 @@ const CTA: React.FC = () => {
     } catch (error) {
       console.error('Form submission error:', error);
       setFormState('idle');
-      // In a real app, show an error message to the user
+      // Show error to user
+      setErrors({ 
+        submit: 'Failed to submit. Please try again or contact us directly.' 
+      });
     }
   };
 
@@ -267,6 +295,11 @@ const CTA: React.FC = () => {
                   </div>
                 </div>
 
+                {errors.submit && (
+                  <p className="text-sm text-red-600 mt-2" role="alert">
+                    {errors.submit}
+                  </p>
+                )}
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

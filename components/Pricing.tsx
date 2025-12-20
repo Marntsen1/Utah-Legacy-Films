@@ -64,6 +64,13 @@ const packages: Package[] = [
 
 const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ pkg, onClose }) => {
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingData, setBookingData] = useState({
+    name: '',
+    email: '',
+    month: 'As soon as possible'
+  });
+  const [error, setError] = useState<string | null>(null);
   
   if (!pkg) return null;
 
@@ -93,7 +100,62 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
           </div>
 
           {step === 1 ? (
-            <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-4" aria-label="Booking request form">
+            <form onSubmit={async (e) => { 
+              e.preventDefault(); 
+              
+              // Validate
+              if (!bookingData.name.trim() || !bookingData.email.trim()) {
+                setError('Please fill in all required fields');
+                return;
+              }
+
+              setIsSubmitting(true);
+              setError(null);
+
+              try {
+                // Get webhook URL from environment variable
+                const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING;
+                
+                if (!webhookUrl) {
+                  throw new Error('Webhook URL not configured');
+                }
+
+                // Send data to n8n webhook
+                const response = await fetch(webhookUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    name: bookingData.name,
+                    email: bookingData.email,
+                    preferredMonth: bookingData.month,
+                    package: pkg.name,
+                    packageId: pkg.id,
+                    packagePrice: pkg.price,
+                    timestamp: new Date().toISOString(),
+                    source: 'Booking Request Form',
+                  }),
+                });
+
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Move to success step
+                setStep(2);
+              } catch (error) {
+                console.error('Booking submission error:', error);
+                setError('Failed to submit booking request. Please try again or contact us directly.');
+              } finally {
+                setIsSubmitting(false);
+              }
+            }} className="space-y-4" aria-label="Booking request form">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
               <div>
                 <label htmlFor="booking-name" className="block text-xs font-medium text-[#362b24] uppercase tracking-wide mb-1.5">
                   Full Name <span className="text-[#c06e46]">*</span>
@@ -103,6 +165,8 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   type="text" 
                   id="booking-name"
                   aria-required="true"
+                  value={bookingData.name}
+                  onChange={(e) => setBookingData({ ...bookingData, name: e.target.value })}
                   className="w-full bg-white border border-[#362b24]/10 rounded-xl px-4 py-3 text-[#362b24] focus:outline-none focus:border-[#c06e46] focus:ring-1 focus:ring-[#c06e46]/20 transition-colors" 
                   placeholder="Jane Doe" 
                 />
@@ -116,6 +180,8 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   type="email" 
                   id="booking-email"
                   aria-required="true"
+                  value={bookingData.email}
+                  onChange={(e) => setBookingData({ ...bookingData, email: e.target.value })}
                   className="w-full bg-white border border-[#362b24]/10 rounded-xl px-4 py-3 text-[#362b24] focus:outline-none focus:border-[#c06e46] focus:ring-1 focus:ring-[#c06e46]/20 transition-colors" 
                   placeholder="jane@example.com" 
                 />
@@ -126,6 +192,8 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 </label>
                 <select 
                   id="booking-month"
+                  value={bookingData.month}
+                  onChange={(e) => setBookingData({ ...bookingData, month: e.target.value })}
                   className="w-full bg-white border border-[#362b24]/10 rounded-xl px-4 py-3 text-[#362b24] focus:outline-none focus:border-[#c06e46] focus:ring-1 focus:ring-[#c06e46]/20 transition-colors"
                   aria-label="Preferred booking month"
                 >
@@ -137,8 +205,15 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
               </div>
               
               <div className="pt-4">
-                <Button variant="primary" className="w-full justify-center">
-                  Continue to Reserve
+                <Button 
+                  variant="primary" 
+                  className="w-full justify-center"
+                  onClick={(e) => {
+                    // Form submission is handled by onSubmit
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Continue to Reserve'}
                 </Button>
                 <p className="text-center text-[10px] text-[#85756b] mt-3">
                   No payment required today. We will contact you to confirm dates.
