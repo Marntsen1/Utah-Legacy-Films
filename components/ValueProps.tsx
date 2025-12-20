@@ -70,14 +70,20 @@ const ValueProps: React.FC = () => {
 
           {/* Centered Image Visual - Family Watching */}
           <Reveal delay={0.3} width="100%">
-             <div className="w-full max-w-3xl mx-auto relative rounded-3xl overflow-hidden bg-[#f5f2eb] p-4">
+             <div className="w-full max-w-3xl mx-auto relative rounded-3xl overflow-hidden bg-[#f5f2eb] p-4 group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-[#362b24]/20 hover:scale-[1.02]">
+               <div className="absolute inset-0 bg-gradient-to-br from-[#c06e46]/0 via-transparent to-[#362b24]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none z-10" />
                <img 
                   src="/family-watching.png" 
                   alt="Family of four watching their legacy film together on the TV, with elderly couple displayed on screen" 
-                  className="w-full h-auto rounded-2xl"
+                  className="w-full h-auto rounded-2xl transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
                   decoding="async"
                />
+               <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20">
+                 <div className="bg-[#362b24]/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-[#362b24]/20">
+                   <span className="text-[#f5f2eb] font-medium text-sm">Family Moments Together</span>
+                 </div>
+               </div>
              </div>
           </Reveal>
         </div>

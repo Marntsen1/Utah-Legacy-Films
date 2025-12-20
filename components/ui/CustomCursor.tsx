@@ -26,7 +26,7 @@ const CustomCursor: React.FC = () => {
     const handleMouseDown = () => setIsClicking(true);
     const handleMouseUp = () => setIsClicking(false);
 
-    // Check if the target is interactive (buttons, links, inputs)
+    // Check if the target is interactive (buttons, links, inputs, images with hover)
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       
@@ -40,6 +40,7 @@ const CustomCursor: React.FC = () => {
         target.closest('button') || 
         target.closest('a') ||
         target.closest('[role="button"]') ||
+        target.closest('.group') || // Hoverable image groups
         window.getComputedStyle(target).cursor === 'pointer';
 
       setIsHovering(!!isClickable);

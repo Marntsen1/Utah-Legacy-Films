@@ -136,15 +136,21 @@ const Hero: React.FC = () => {
 
       {/* 2. VISUAL ANCHOR: Interview Setup Image */}
       <Reveal delay={0.6} width="100%">
-        <div className="relative w-full max-w-6xl mx-auto z-10 mt-8">
-          <div className="relative rounded-3xl overflow-hidden bg-[#f5f2eb] p-4">
+        <div className="relative w-full max-w-6xl mx-auto z-10 mt-8 group">
+          <div className="relative rounded-3xl overflow-hidden bg-[#f5f2eb] p-4 transition-all duration-500 hover:shadow-2xl hover:shadow-[#362b24]/20 hover:scale-[1.02] cursor-pointer">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#362b24]/0 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none z-10" />
             <img 
               src="/interview-setup.png" 
               alt="Professional video interview setup with elderly couple and videographer in a warm living room" 
-              className="w-full h-auto rounded-2xl"
+              className="w-full h-auto rounded-2xl transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
               decoding="async"
             />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
+                <span className="text-white font-medium text-sm">Professional Interview Setup</span>
+              </div>
+            </div>
           </div>
         </div>
       </Reveal>
