@@ -257,9 +257,6 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 >
                   {isSubmitting ? 'Submitting...' : 'Continue to Reserve'}
                 </Button>
-                <p className="text-center text-[10px] text-[#85756b] mt-3">
-                  No payment required today. We will contact you to confirm dates.
-                </p>
               </div>
             </form>
           ) : (
