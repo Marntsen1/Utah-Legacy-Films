@@ -46,7 +46,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract amount and package name from webhook body\nconst body = $input.item.json.body || $input.item.json;\nconst amount = body.amount || 0; // Amount in cents\nconst packageName = body.packageName || 'Unknown Package';\n\n// Return data for Stripe node\nreturn {\n  json: {\n    amount: amount,\n    currency: 'usd',\n    metadata: {\n      packageName: packageName\n    }\n  }\n};"
+        "jsCode": "// Extract amount and package name from webhook body\nconst body = $input.item.json.body || $input.item.json;\nconst amount = body.amount || 0; // Amount in cents\nconst packageName = body.packageName || 'Unknown Package';\n\n// Return data for HTTP Request to Stripe API\nreturn {\n  json: {\n    amount: amount,\n    currency: 'usd',\n    packageName: packageName\n  }\n};"
       },
       "id": "prepare-payment",
       "name": "Prepare Payment Intent",
@@ -56,26 +56,64 @@
     },
     {
       "parameters": {
-        "resource": "paymentIntent",
-        "operation": "create",
-        "amount": "={{ $json.amount }}",
-        "currency": "={{ $json.currency }}",
-        "metadata": "={{ $json.metadata }}",
-        "additionalFields": {
-          "automatic_payment_methods[enabled]": true
-        }
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/payment_intents",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $credentials.stripeSecretKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "amount",
+              "value": "={{ $json.amount }}"
+            },
+            {
+              "name": "currency",
+              "value": "={{ $json.currency }}"
+            },
+            {
+              "name": "automatic_payment_methods[enabled]",
+              "value": "true"
+            },
+            {
+              "name": "metadata[packageName]",
+              "value": "={{ $json.packageName }}"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "stripe-payment-intent",
-      "name": "Stripe - Create Payment Intent",
-      "type": "n8n-nodes-base.stripe",
-      "typeVersion": 1,
+      "name": "Stripe API - Create Payment Intent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [850, 200],
       "credentials": {
-        "stripeApi": {
+        "httpHeaderAuth": {
           "id": "YOUR_STRIPE_CREDENTIALS_ID",
-          "name": "Stripe account"
+          "name": "Stripe API Key"
         }
-      }
+      },
+      "notes": "Creates a Stripe Payment Intent using direct API call"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Stripe API response and extract client_secret\nconst response = $input.item.json;\n\n// If response is a string, parse it\nlet paymentIntent;\nif (typeof response === 'string') {\n  try {\n    paymentIntent = JSON.parse(response);\n  } catch (e) {\n    paymentIntent = response;\n  }\n} else {\n  paymentIntent = response;\n}\n\n// Extract client_secret\nreturn {\n  json: {\n    client_secret: paymentIntent.client_secret || paymentIntent.data?.client_secret\n  }\n};"
+      },
+      "id": "parse-stripe-response",
+      "name": "Parse Stripe Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
     },
     {
       "parameters": {
@@ -299,14 +337,25 @@
       "main": [
         [
           {
-            "node": "Stripe - Create Payment Intent",
+            "node": "Stripe API - Create Payment Intent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Stripe - Create Payment Intent": {
+    "Stripe API - Create Payment Intent": {
+      "main": [
+        [
+          {
+            "node": "Parse Stripe Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Stripe Response": {
       "main": [
         [
           {

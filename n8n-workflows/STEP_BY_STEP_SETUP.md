@@ -53,11 +53,21 @@ This guide walks you through every single click. Follow it in order.
 
 **Now configure it:**
 
-6. **Configure Stripe Node:**
-   - Click on the node labeled **"Stripe - Create Payment Intent"**
-   - In the node settings (right panel), find **"Credential to connect with"**
-   - Click the dropdown → Select **"Stripe Account"** (the one you created)
-   - The node should now show your Stripe account name
+6. **Configure Stripe HTTP Request Node:**
+   - Click on the node labeled **"Stripe API - Create Payment Intent"**
+   - This node uses HTTP Request to call Stripe's API directly
+   - **Option A (Recommended)**: Set up HTTP Header Auth credential:
+     - Go to Credentials → Add → Search "Header Auth"
+     - Name: `Stripe API Key`
+     - Name field: `Authorization`
+     - Value: `Bearer sk_test_YOUR_SECRET_KEY` (replace with your actual key)
+     - Save, then select this credential in the node
+   - **Option B (Simpler)**: Manually set the header:
+     - In the node, find **"Header Parameters"**
+     - Find the **Authorization** header
+     - Change the value to: `Bearer sk_test_YOUR_ACTUAL_SECRET_KEY`
+     - Replace with your real Stripe Secret Key from https://dashboard.stripe.com/apikeys
+   - Save the node
 
 7. **Configure Email Node:**
    - Click on **"Send Booking Email (Async)"** node
