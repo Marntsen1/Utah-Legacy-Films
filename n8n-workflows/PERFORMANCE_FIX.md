@@ -75,3 +75,5 @@ Schedule (5pm) → Read File → Process Data → Check if Bookings → Format &
 - **Change email format**: Edit the HTML in "Format Email Content" node
 - **Add filters**: Filter bookings by date range, package type, etc.
 
+
+

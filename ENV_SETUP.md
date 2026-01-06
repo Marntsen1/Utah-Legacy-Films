@@ -100,3 +100,5 @@ To test if environment variables are loading:
 
 The code now has fallback URLs hardcoded, so it should work even if environment variables aren't set. But it's better to use environment variables for flexibility.
 
+
+

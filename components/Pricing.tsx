@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react';
 import { Reveal } from './ui/Reveal';
 import Button from './ui/Button';
 import CalendarPicker from './ui/CalendarPicker';
+import PaymentForm from './PaymentForm';
 
 interface Package {
   id: string;
@@ -64,8 +65,9 @@ const packages: Package[] = [
 ];
 
 const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ pkg, onClose }) => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1 = form, 2 = payment, 3 = success
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [bookingData, setBookingData] = useState({
     name: '',
     email: '',
@@ -75,6 +77,10 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
   const [error, setError] = useState<string | null>(null);
   
   if (!pkg) return null;
+
+  // Calculate 50% payment amount
+  const packagePrice = parseFloat(pkg.price.replace(/[^0-9.]/g, ''));
+  const paymentAmount = Math.round(packagePrice * 50); // 50% in cents
 
   return (
     <motion.div 
@@ -102,6 +108,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
           </div>
 
           {step === 1 ? (
+            // Step 1: Booking Form
             <form onSubmit={async (e) => { 
               e.preventDefault(); 
               
@@ -177,7 +184,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 const responseData = await response.json().catch(() => ({}));
                 console.log('Response data:', responseData); // Debug log
 
-                // Move to success step
+                // Move to payment step (don't submit booking data yet - wait for payment)
                 setStep(2);
               } catch (error) {
                 console.error('Booking submission error:', error);
@@ -259,13 +266,80 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                 </Button>
               </div>
             </form>
+          ) : step === 2 ? (
+            // Step 2: Payment
+            <div>
+              <div className="mb-6">
+                <span className="text-xs font-bold tracking-wider text-[#c06e46] uppercase">Payment</span>
+                <h3 className="font-serif text-2xl text-[#362b24] mt-1">Complete Your Booking</h3>
+                <p className="text-[#85756b] mt-1 text-sm">
+                  {pkg.name} - Pay 50% today (${(packagePrice / 2).toFixed(2)})
+                </p>
+              </div>
+              <PaymentForm
+                amount={paymentAmount}
+                packageName={pkg.name}
+                packageId={pkg.id}
+                onSuccess={async (paymentId) => {
+                  setPaymentIntentId(paymentId);
+                  
+                  // Send booking data with payment info to webhook
+                  try {
+                    const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
+                    
+                    const bookingDateTime = new Date(bookingData.selectedDate!);
+                    const [time, period] = bookingData.selectedTime.split(' ');
+                    const [hours, minutes] = time.split(':');
+                    let hour24 = parseInt(hours);
+                    if (period === 'PM' && hour24 !== 12) hour24 += 12;
+                    if (period === 'AM' && hour24 === 12) hour24 = 0;
+                    bookingDateTime.setHours(hour24, parseInt(minutes), 0, 0);
+
+                    await fetch(webhookUrl, {
+                      method: 'POST',
+                      mode: 'cors',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        name: bookingData.name,
+                        email: bookingData.email,
+                        selectedDate: bookingData.selectedDate!.toISOString().split('T')[0],
+                        selectedTime: bookingData.selectedTime,
+                        bookingDateTime: bookingDateTime.toISOString(),
+                        package: pkg.name,
+                        packageId: pkg.id,
+                        packagePrice: pkg.price,
+                        paymentIntentId: paymentId,
+                        paymentAmount: paymentAmount,
+                        paymentStatus: 'paid_50_percent',
+                        timestamp: new Date().toISOString(),
+                        source: 'Booking Request Form',
+                      }),
+                    });
+
+                    // Move to success step
+                    setStep(3);
+                  } catch (err) {
+                    console.error('Error sending booking data:', err);
+                    setError('Payment successful but failed to send booking details. Please contact us.');
+                  }
+                }}
+                onCancel={() => setStep(1)}
+              />
+            </div>
           ) : (
+            // Step 3: Success
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-[#c06e46]/10 rounded-full flex items-center justify-center mx-auto mb-4 text-[#c06e46]">
                 <Check className="w-8 h-8" />
               </div>
-              <h4 className="font-serif text-2xl text-[#362b24] mb-2">Request Received</h4>
-              <p className="text-[#85756b] mb-6">Thank you for choosing the {pkg.name} package. We will be in touch within 24 hours to finalize your booking.</p>
+              <h4 className="font-serif text-2xl text-[#362b24] mb-2">Booking Confirmed!</h4>
+              <p className="text-[#85756b] mb-4">
+                Thank you for choosing the {pkg.name} package. Your payment of ${(packagePrice / 2).toFixed(2)} has been processed.
+              </p>
+              <p className="text-[#85756b] text-sm mb-6">
+                We've received your booking for {bookingData.selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {bookingData.selectedTime}. 
+                We'll send a confirmation email shortly. The remaining balance of ${(packagePrice / 2).toFixed(2)} will be due upon delivery.
+              </p>
               <Button variant="outline" onClick={onClose} className="w-full justify-center">
                 Return to Site
               </Button>
@@ -278,7 +352,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
             <motion.div 
                 className="h-full bg-[#c06e46]" 
                 initial={{ width: "0%" }}
-                animate={{ width: step === 1 ? "50%" : "100%" }}
+                animate={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }}
             />
         </div>
       </motion.div>

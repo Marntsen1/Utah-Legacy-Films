@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f2eb;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #362b24;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2e231e;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>n8n Webhook Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Booking Request Webhook</h2>
+        <p>This will test the booking request webhook with sample data.</p>
+        <button onclick="testBookingWebhook()">Test Booking Webhook</button>
+        <div id="booking-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Free Questions Webhook</h2>
+        <p>This will test the free questions form webhook with sample data.</p>
+        <button onclick="testCTAWebhook()">Test CTA Webhook</button>
+        <div id="cta-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Check Environment Variables</h2>
+        <p>Check if webhook URLs are configured (only works on your website, not this test page).</p>
+        <button onclick="checkEnvVars()">Check Env Vars</button>
+        <div id="env-result"></div>
+    </div>
+
+    <script>
+        const BOOKING_WEBHOOK = 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
+        const CTA_WEBHOOK = 'https://mattarntsen.app.n8n.cloud/webhook-test/free-questions';
+
+        async function testBookingWebhook() {
+            const resultDiv = document.getElementById('booking-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+            
+            const testData = {
+                name: 'Test User',
+                email: 'test@example.com',
+                selectedDate: '2024-12-20',
+                selectedTime: '11:00 AM',
+                bookingDateTime: '2024-12-20T11:00:00.000Z',
+                package: 'Signature Story',
+                packageId: 'signature',
+                packagePrice: '$4,500',
+                timestamp: new Date().toISOString(),
+                source: 'Booking Request Form - Test'
+            };
+
+            try {
+                console.log('Sending to:', BOOKING_WEBHOOK);
+                console.log('Payload:', testData);
+                
+                const response = await fetch(BOOKING_WEBHOOK, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                const responseData = await response.json().catch(() => ({ text: await response.text() }));
+                console.log('Response data:', responseData);
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ SUCCESS! Webhook responded successfully.
+                            
+Status: ${response.status} ${response.statusText}
+Response: ${JSON.stringify(responseData, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ ERROR: Webhook returned error status.
+                            
+Status: ${response.status} ${response.statusText}
+Response: ${JSON.stringify(responseData, null, 2)}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ FAILED TO FETCH
+                        
+Error: ${error.message}
+                        
+This usually means:
+- CORS issue (check n8n workflow CORS headers)
+- Workflow not active in n8n
+- Network error
+- Webhook URL incorrect
+
+Check browser console (F12) for more details.
+                    </div>
+                `;
+            }
+        }
+
+        async function testCTAWebhook() {
+            const resultDiv = document.getElementById('cta-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+            
+            const testData = {
+                name: 'Test User',
+                email: 'test@example.com',
+                phone: '555-1234',
+                recipient: 'My grandmother',
+                timestamp: new Date().toISOString(),
+                source: 'Free Questions Form - Test'
+            };
+
+            try {
+                console.log('Sending to:', CTA_WEBHOOK);
+                console.log('Payload:', testData);
+                
+                const response = await fetch(CTA_WEBHOOK, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                });
+
+                console.log('Response status:', response.status);
+                const responseData = await response.json().catch(() => ({ text: await response.text() }));
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ SUCCESS! Webhook responded successfully.
+                            
+Status: ${response.status}
+Response: ${JSON.stringify(responseData, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ ERROR: Webhook returned error status.
+                            
+Status: ${response.status}
+Response: ${JSON.stringify(responseData, null, 2)}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ FAILED TO FETCH
+                        
+Error: ${error.message}
+                        
+Check browser console (F12) for more details.
+                    </div>
+                `;
+            }
+        }
+
+        function checkEnvVars() {
+            const resultDiv = document.getElementById('env-result');
+            resultDiv.innerHTML = `
+                <div class="result info">
+                    Note: Environment variables are only available when running on your actual website (not this test page).
+                    
+To check on your website:
+1. Open your website
+2. Press F12 to open DevTools
+3. Go to Console tab
+4. Type: console.log(import.meta.env)
+5. Look for VITE_N8N_WEBHOOK_BOOKING and VITE_N8N_WEBHOOK_CTA
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+
+
+
