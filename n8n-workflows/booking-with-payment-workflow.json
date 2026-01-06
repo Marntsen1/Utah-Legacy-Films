@@ -1,0 +1,352 @@
+{
+  "name": "Utah Legacy Films - Booking with Payment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-booking",
+      "name": "Webhook - Booking Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "booking-request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-payment-intent",
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "create_payment_intent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-payment-intent",
+      "name": "IF - Payment Intent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract amount and package name from webhook body\nconst body = $input.item.json.body || $input.item.json;\nconst amount = body.amount || 0; // Amount in cents\nconst packageName = body.packageName || 'Unknown Package';\n\n// Return data for Stripe node\nreturn {\n  json: {\n    amount: amount,\n    currency: 'usd',\n    metadata: {\n      packageName: packageName\n    }\n  }\n};"
+      },
+      "id": "prepare-payment",
+      "name": "Prepare Payment Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "resource": "paymentIntent",
+        "operation": "create",
+        "amount": "={{ $json.amount }}",
+        "currency": "={{ $json.currency }}",
+        "metadata": "={{ $json.metadata }}",
+        "additionalFields": {
+          "automatic_payment_methods[enabled]": true
+        }
+      },
+      "id": "stripe-payment-intent",
+      "name": "Stripe - Create Payment Intent",
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "credentials": {
+        "stripeApi": {
+          "id": "YOUR_STRIPE_CREDENTIALS_ID",
+          "name": "Stripe account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"clientSecret\": $json.client_secret } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-payment",
+      "name": "Respond - Payment Intent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "name",
+              "name": "Name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "selectedDate",
+              "name": "Selected Date",
+              "value": "={{ $json.body.selectedDate }}",
+              "type": "string"
+            },
+            {
+              "id": "selectedTime",
+              "name": "Selected Time",
+              "value": "={{ $json.body.selectedTime }}",
+              "type": "string"
+            },
+            {
+              "id": "bookingDateTime",
+              "name": "Booking DateTime",
+              "value": "={{ $json.body.bookingDateTime }}",
+              "type": "string"
+            },
+            {
+              "id": "package",
+              "name": "Package",
+              "value": "={{ $json.body.package }}",
+              "type": "string"
+            },
+            {
+              "id": "packageId",
+              "name": "Package ID",
+              "value": "={{ $json.body.packageId }}",
+              "type": "string"
+            },
+            {
+              "id": "packagePrice",
+              "name": "Package Price",
+              "value": "={{ $json.body.packagePrice }}",
+              "type": "string"
+            },
+            {
+              "id": "paymentIntentId",
+              "name": "Payment Intent ID",
+              "value": "={{ $json.body.paymentIntentId }}",
+              "type": "string"
+            },
+            {
+              "id": "paymentAmount",
+              "name": "Payment Amount",
+              "value": "={{ $json.body.paymentAmount }}",
+              "type": "string"
+            },
+            {
+              "id": "paymentStatus",
+              "name": "Payment Status",
+              "value": "={{ $json.body.paymentStatus }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "Timestamp",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "source",
+              "name": "Source",
+              "value": "={{ $json.body.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-booking-data",
+      "name": "Set Booking Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Booking request received. We will be in touch within 24 hours.\" } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-booking",
+      "name": "Respond to Webhook (Immediate)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "New Booking Request - {{ $json.Package }} - {{ $json.Name }}",
+        "emailType": "html",
+        "message": "<h2>New Booking Request</h2><p><strong>Name:</strong> {{ $json.Name }}</p><p><strong>Email:</strong> {{ $json.Email }}</p><p><strong>Selected Date:</strong> {{ $json.SelectedDate }}</p><p><strong>Selected Time:</strong> {{ $json.SelectedTime }}</p><p><strong>Booking DateTime:</strong> {{ $json.BookingDateTime }}</p><p><strong>Package:</strong> {{ $json.Package }} ({{ $json.PackagePrice }})</p><p><strong>Package ID:</strong> {{ $json.PackageId }}</p><p><strong>Payment Intent ID:</strong> {{ $json.PaymentIntentId }}</p><p><strong>Payment Amount:</strong> ${{ $json.PaymentAmount }}</p><p><strong>Payment Status:</strong> {{ $json.PaymentStatus }}</p><p><strong>Submitted:</strong> {{ $json.Timestamp }}</p><p><strong>Source:</strong> {{ $json.Source }}</p>",
+        "options": {}
+      },
+      "id": "send-booking-email",
+      "name": "Send Booking Email (Async)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1050, 400],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credentials",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "fileName": "bookings.csv",
+        "dataPropertyName": "data",
+        "options": {
+          "fileContent": "={{ $json.Name }},{{ $json.Email }},{{ $json.SelectedDate }},{{ $json.SelectedTime }},{{ $json.BookingDateTime }},{{ $json.Package }},{{ $json.PackageId }},{{ $json.PackagePrice }},{{ $json.PaymentIntentId }},{{ $json.PaymentAmount }},{{ $json.PaymentStatus }},{{ $json.Timestamp }}\n"
+        }
+      },
+      "id": "save-to-file",
+      "name": "Save to File (for daily summary)",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [1050, 500],
+      "notes": "Stores booking data for daily summary"
+    }
+  ],
+  "connections": {
+    "Webhook - Booking Request": {
+      "main": [
+        [
+          {
+            "node": "IF - Payment Intent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Payment Intent?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Payment Intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Payment Intent": {
+      "main": [
+        [
+          {
+            "node": "Stripe - Create Payment Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe - Create Payment Intent": {
+      "main": [
+        [
+          {
+            "node": "Respond - Payment Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Immediate)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Booking Email (Async)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to File (for daily summary)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-20T00:00:00.000Z",
+  "versionId": "3"
+}
+

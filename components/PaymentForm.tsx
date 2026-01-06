@@ -33,7 +33,7 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
     const createPaymentIntent = async () => {
       try {
         // Call your backend to create payment intent
-        // For now, we'll use n8n webhook to create it
+        // The n8n workflow will detect action: 'create_payment_intent' and create the payment intent
         const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
         
         const response = await fetch(webhookUrl, {
@@ -44,7 +44,7 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
           },
           body: JSON.stringify({
             action: 'create_payment_intent',
-            amount: amount,
+            amount: amount, // Amount in cents (50% of package price)
             packageName: packageName,
           }),
         });
