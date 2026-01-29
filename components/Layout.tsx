@@ -104,6 +104,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 >
                   About Us
                 </a>
+                <Link 
+                  to="/free-questions"
+                  className="text-[#85756b] hover:text-[#362b24] transition-colors"
+                >
+                  Free Questions
+                </Link>
                 <a 
                   href="#plans" 
                   className="px-5 py-2.5 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors shadow-lg shadow-[#362b24]/10"
@@ -172,6 +178,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 >
                   About Us
                 </a>
+                <Link 
+                  to="/free-questions"
+                  className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Free Questions
+                </Link>
                 <a 
                   href="#plans" 
                   className="px-6 py-3 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors text-center font-medium"
