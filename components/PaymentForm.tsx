@@ -20,7 +20,7 @@ interface PaymentFormProps {
   onCancel: () => void;
 }
 
-const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onSuccess, onCancel }) => {
+const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, packageId, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,9 +32,9 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
   useEffect(() => {
     const createPaymentIntent = async () => {
       try {
-        // Call your backend to create payment intent
-        // The n8n workflow will detect action: 'create_payment_intent' and create the payment intent
-        const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
+        // Use the booking webhook URL - it should handle payment intent creation
+        // If you have a separate payment intent endpoint, use: import.meta.env.VITE_N8N_WEBHOOK_PAYMENT_INTENT
+        const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://n8n.srv1250103.hstgr.cloud/webhook-test/booking-request';
         
         const response = await fetch(webhookUrl, {
           method: 'POST',
@@ -46,11 +46,13 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
             action: 'create_payment_intent',
             amount: amount, // Amount in cents (50% of package price)
             packageName: packageName,
+            packageId: packageId,
           }),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to create payment intent');
+          const errorText = await response.text().catch(() => 'Unknown error');
+          throw new Error(`Failed to create payment intent: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json().catch(() => ({}));
@@ -58,21 +60,28 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
-          // Fallback: if no backend, we'll proceed without payment intent
-          // This requires backend setup - see STRIPE_SETUP.md
-          console.warn('No payment intent created. Backend setup required for full payment processing.');
-          setError('Payment processing requires backend setup. Please contact support.');
+          // Check if there's an error message
+          if (data.error) {
+            setError(data.error);
+          } else {
+            setError('Payment processing requires backend setup. Please contact support.');
+          }
         }
       } catch (err) {
-        console.error('Error creating payment intent:', err);
-        setError('Failed to initialize payment. Please try again.');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment. Please try again.';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
-    createPaymentIntent();
-  }, [amount, packageName]);
+    if (amount > 0) {
+      createPaymentIntent();
+    } else {
+      setError('Invalid payment amount');
+      setIsLoading(false);
+    }
+  }, [amount, packageName, packageId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +119,6 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
         throw new Error('Payment not completed');
       }
     } catch (err) {
-      console.error('Payment error:', err);
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
       setIsProcessing(false);
     }
@@ -142,7 +150,6 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
             Payment processing requires backend setup. Please see STRIPE_SETUP.md for instructions.
           </p>
           <Button
-            type="button"
             variant="outline"
             onClick={onCancel}
             className="w-full"
@@ -178,28 +185,26 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
       <div className="bg-[#f5f2eb] rounded-xl p-4 border border-[#362b24]/10">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-[#85756b]">Amount Due Today (50%):</span>
-          <span className="text-lg font-semibold text-[#362b24]">${(amount / 100 / 2).toFixed(2)}</span>
+          <span className="text-lg font-semibold text-[#362b24]">${(amount / 100).toFixed(2)}</span>
         </div>
         <p className="text-xs text-[#85756b] mt-2">
-          Remaining balance of ${(amount / 100 / 2).toFixed(2)} due upon delivery.
+          Remaining balance of ${(amount / 100).toFixed(2)} due upon delivery.
         </p>
       </div>
 
       <div className="flex gap-3">
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={onCancel}
-          className="flex-1"
           disabled={isProcessing}
+          className="flex-1 px-6 py-3 border border-[#362b24]/20 text-[#362b24] rounded-full hover:bg-[#362b24]/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
-        </Button>
-        <Button
+        </button>
+        <button
           type="submit"
-          variant="primary"
-          className="flex-1"
           disabled={!stripe || isProcessing}
+          className="flex-1 px-6 py-3 bg-[#c06e46] text-white rounded-full hover:bg-[#a85a35] transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center"
         >
           {isProcessing ? (
             <>
@@ -208,10 +213,10 @@ const PaymentFormInner: React.FC<PaymentFormProps> = ({ amount, packageName, onS
             </>
           ) : (
             <>
-              Pay ${(amount / 100 / 2).toFixed(2)} Now
+              Pay ${(amount / 100).toFixed(2)} Now
             </>
           )}
-        </Button>
+        </button>
       </div>
     </form>
   );

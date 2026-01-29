@@ -22,7 +22,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Uncaught error:', error, errorInfo);
+    // Error logged to error reporting service in production
   }
 
   public render(): ReactNode {

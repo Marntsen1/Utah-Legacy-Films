@@ -19,13 +19,10 @@ export const LogoIcon: React.FC<{ className?: string }> = ({ className = "w-12 h
       alt="Utah Legacy Films Logo" 
       className={`${className} object-contain mix-blend-multiply`}
       onError={(e) => {
-        console.error('Failed to load logo.png');
-        console.error('Image src:', e.currentTarget.src);
-        console.error('Current URL:', window.location.href);
+        // Image failed to load - fallback handled by onError
         setImageError(true);
       }}
       onLoad={() => {
-        console.log('Successfully loaded logo.png');
       }}
       loading="eager"
     />

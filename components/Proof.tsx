@@ -48,7 +48,6 @@ const Proof: React.FC = () => {
               aria-label="Play documentary video"
               onClick={() => {
                 // Add video modal or link to video here
-                console.log('Play video clicked');
               }}
             >
                 <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-white border-b-[10px] border-b-transparent ml-1" />

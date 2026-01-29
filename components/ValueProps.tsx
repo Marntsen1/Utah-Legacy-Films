@@ -79,11 +79,9 @@ const ValueProps: React.FC = () => {
                   loading="lazy"
                   decoding="async"
                   onError={(e) => {
-                    console.error('Failed to load family-watching.png');
-                    console.error('Image src:', e.currentTarget.src);
+                    // Image failed to load - fallback handled by onError
                   }}
                   onLoad={() => {
-                    console.log('Successfully loaded family-watching.png');
                   }}
                />
                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import AnimatedBackground from './components/ui/AnimatedBackground';
 import CustomCursor from './components/ui/CustomCursor';
@@ -7,10 +8,11 @@ import ValueProps from './components/ValueProps';
 import Proof from './components/Proof';
 import Pricing from './components/Pricing';
 import CTA from './components/CTA';
+import FreeQuestionsLanding from './components/FreeQuestionsLanding';
 
-function App() {
+function HomePage() {
   return (
-    <Layout>
+    <>
       <CustomCursor />
       <AnimatedBackground />
       <div className="relative z-10 flex flex-col gap-10">
@@ -20,7 +22,20 @@ function App() {
         <Pricing />
         <CTA />
       </div>
-    </Layout>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/free-questions" element={<FreeQuestionsLanding />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 

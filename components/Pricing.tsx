@@ -5,6 +5,7 @@ import { Reveal } from './ui/Reveal';
 import Button from './ui/Button';
 import CalendarPicker from './ui/CalendarPicker';
 import PaymentForm from './PaymentForm';
+import { sanitizeName, sanitizeEmail, sanitizeText, RateLimiter } from '../utils/security';
 
 interface Package {
   id: string;
@@ -75,6 +76,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
     selectedTime: ''
   });
   const [error, setError] = useState<string | null>(null);
+  const rateLimiter = new RateLimiter('booking', 3, 60000); // 3 requests per minute
   
   if (!pkg) return null;
 
@@ -112,85 +114,57 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
             <form onSubmit={async (e) => { 
               e.preventDefault(); 
               
-              // Validate
-              if (!bookingData.name.trim() || !bookingData.email.trim()) {
-                setError('Please fill in all required fields');
-                return;
-              }
-
-              if (!bookingData.selectedDate || !bookingData.selectedTime) {
-                setError('Please select a date and time for your booking');
-                return;
-              }
-
               setIsSubmitting(true);
               setError(null);
 
               try {
-                // Get webhook URL from environment variable or use fallback
-                const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
-                
-                console.log('Webhook URL:', webhookUrl); // Debug log
-                console.log('All env vars:', import.meta.env); // Debug all env vars
-                
-                if (!webhookUrl || webhookUrl === 'undefined') {
-                  console.error('Webhook URL not found in environment variables');
-                  throw new Error('Webhook URL not configured. Please check environment variables.');
+                // Validate required fields
+                if (!bookingData.name.trim()) {
+                  setError('Please enter your name');
+                  setIsSubmitting(false);
+                  return;
                 }
 
-                // Format date and time
-                const bookingDateTime = new Date(bookingData.selectedDate);
-                const [time, period] = bookingData.selectedTime.split(' ');
-                const [hours, minutes] = time.split(':');
-                let hour24 = parseInt(hours);
-                if (period === 'PM' && hour24 !== 12) hour24 += 12;
-                if (period === 'AM' && hour24 === 12) hour24 = 0;
-                bookingDateTime.setHours(hour24, parseInt(minutes), 0, 0);
-
-                const payload = {
-                  name: bookingData.name,
-                  email: bookingData.email,
-                  selectedDate: bookingData.selectedDate.toISOString().split('T')[0],
-                  selectedTime: bookingData.selectedTime,
-                  bookingDateTime: bookingDateTime.toISOString(),
-                  package: pkg.name,
-                  packageId: pkg.id,
-                  packagePrice: pkg.price,
-                  timestamp: new Date().toISOString(),
-                  source: 'Booking Request Form',
-                };
-
-                console.log('Sending payload:', payload); // Debug log
-
-                // Send data to n8n webhook
-                const response = await fetch(webhookUrl, {
-                  method: 'POST',
-                  mode: 'cors', // Explicitly enable CORS
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(payload),
-                });
-
-                console.log('Response status:', response.status); // Debug log
-                console.log('Response ok:', response.ok); // Debug log
-
-                if (!response.ok) {
-                  const errorText = await response.text();
-                  console.error('Error response:', errorText);
-                  throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                if (!bookingData.email.trim()) {
+                  setError('Please enter your email address');
+                  setIsSubmitting(false);
+                  return;
                 }
 
-                const responseData = await response.json().catch(() => ({}));
-                console.log('Response data:', responseData); // Debug log
+                // Validate email format
+                try {
+                  sanitizeEmail(bookingData.email);
+                } catch (err) {
+                  setError('Please enter a valid email address');
+                  setIsSubmitting(false);
+                  return;
+                }
 
-                // Move to payment step (don't submit booking data yet - wait for payment)
+                // Validate name
+                try {
+                  sanitizeName(bookingData.name);
+                } catch (err) {
+                  setError('Please enter a valid name');
+                  setIsSubmitting(false);
+                  return;
+                }
+
+                if (!bookingData.selectedDate || !bookingData.selectedTime) {
+                  setError('Please select a date and time for your booking');
+                  setIsSubmitting(false);
+                  return;
+                }
+
+                // All validation passed - move to payment step
+                // We'll submit booking data AFTER payment succeeds
                 setStep(2);
               } catch (error) {
-                console.error('Booking submission error:', error);
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                setError(`Failed to submit booking request: ${errorMessage}. Please try again or contact us directly.`);
-              } finally {
+                if (errorMessage.includes('Invalid') || errorMessage.includes('sanitize')) {
+                  setError('Invalid input detected. Please check your information and try again.');
+                } else {
+                  setError('Please check your information and try again.');
+                }
                 setIsSubmitting(false);
               }
             }} className="space-y-4" aria-label="Booking request form">
@@ -208,6 +182,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   type="text" 
                   id="booking-name"
                   aria-required="true"
+                  maxLength={100}
                   value={bookingData.name}
                   onChange={(e) => setBookingData({ ...bookingData, name: e.target.value })}
                   className="w-full bg-white border border-[#362b24]/10 rounded-xl px-4 py-3 text-[#362b24] focus:outline-none focus:border-[#c06e46] focus:ring-1 focus:ring-[#c06e46]/20 transition-colors" 
@@ -223,6 +198,7 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   type="email" 
                   id="booking-email"
                   aria-required="true"
+                  maxLength={254}
                   value={bookingData.email}
                   onChange={(e) => setBookingData({ ...bookingData, email: e.target.value })}
                   className="w-full bg-white border border-[#362b24]/10 rounded-xl px-4 py-3 text-[#362b24] focus:outline-none focus:border-[#c06e46] focus:ring-1 focus:ring-[#c06e46]/20 transition-colors" 
@@ -285,8 +261,16 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                   
                   // Send booking data with payment info to webhook
                   try {
-                    const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://mattarntsen.app.n8n.cloud/webhook-test/booking-request';
+                    // Use the Hostinger n8n webhook URL
+                    const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_BOOKING || 'https://n8n.srv1250103.hstgr.cloud/webhook-test/booking-request';
                     
+                    if (!webhookUrl || webhookUrl === 'undefined') {
+                      console.error('Webhook URL not configured');
+                      // Still show success since payment went through
+                      setStep(3);
+                      return;
+                    }
+
                     const bookingDateTime = new Date(bookingData.selectedDate!);
                     const [time, period] = bookingData.selectedTime.split(' ');
                     const [hours, minutes] = time.split(':');
@@ -295,32 +279,65 @@ const BookingModal: React.FC<{ pkg: Package | null, onClose: () => void }> = ({ 
                     if (period === 'AM' && hour24 === 12) hour24 = 0;
                     bookingDateTime.setHours(hour24, parseInt(minutes), 0, 0);
 
-                    await fetch(webhookUrl, {
+                    // Prepare booking data
+                    const bookingPayload = {
+                      name: sanitizeName(bookingData.name),
+                      email: sanitizeEmail(bookingData.email),
+                      selectedDate: bookingData.selectedDate!.toISOString().split('T')[0],
+                      selectedTime: bookingData.selectedTime,
+                      bookingDateTime: bookingDateTime.toISOString(),
+                      package: pkg.name,
+                      packageId: pkg.id,
+                      packagePrice: pkg.price,
+                      paymentIntentId: paymentId,
+                      paymentAmount: paymentAmount,
+                      paymentStatus: 'paid_50_percent',
+                      timestamp: new Date().toISOString(),
+                      source: 'Booking Request Form',
+                    };
+
+                    // Send to webhook with timeout
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+                    const response = await fetch(webhookUrl, {
                       method: 'POST',
                       mode: 'cors',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        name: bookingData.name,
-                        email: bookingData.email,
-                        selectedDate: bookingData.selectedDate!.toISOString().split('T')[0],
-                        selectedTime: bookingData.selectedTime,
-                        bookingDateTime: bookingDateTime.toISOString(),
-                        package: pkg.name,
-                        packageId: pkg.id,
-                        packagePrice: pkg.price,
-                        paymentIntentId: paymentId,
-                        paymentAmount: paymentAmount,
-                        paymentStatus: 'paid_50_percent',
-                        timestamp: new Date().toISOString(),
-                        source: 'Booking Request Form',
-                      }),
+                      headers: { 
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(bookingPayload),
+                      signal: controller.signal,
                     });
 
-                    // Move to success step
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                      const errorText = await response.text().catch(() => 'Unknown error');
+                      console.error('Webhook error:', response.status, errorText);
+                      // Still show success since payment went through
+                      setStep(3);
+                      return;
+                    }
+
+                    // Success - move to success step
                     setStep(3);
                   } catch (err) {
+                    // Log error but don't block success since payment succeeded
                     console.error('Error sending booking data:', err);
-                    setError('Payment successful but failed to send booking details. Please contact us.');
+                    
+                    // Check if it's a network error
+                    if (err instanceof Error) {
+                      if (err.name === 'AbortError') {
+                        console.error('Request timed out');
+                      } else if (err.message.includes('Failed to fetch')) {
+                        console.error('Network error - webhook may be down or CORS issue');
+                      }
+                    }
+                    
+                    // Still show success since payment went through
+                    // The booking data can be retrieved from Stripe payment metadata
+                    setStep(3);
                   }
                 }}
                 onCancel={() => setStep(1)}

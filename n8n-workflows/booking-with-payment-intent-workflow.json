@@ -1,0 +1,283 @@
+{
+  "name": "Booking Request with Payment Intent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook - Booking Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "booking-request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-action",
+              "leftValue": "={{ $json.body.action || $json.body.action }}",
+              "rightValue": "create_payment_intent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-node",
+      "name": "Check Action Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for Stripe Payment Intent creation\nconst body = $input.item.json.body || $input.item.json;\nconst amount = parseInt(body.amount) || 0;\nconst packageName = body.packageName || 'Unknown Package';\nconst packageId = body.packageId || 'unknown';\n\n// Return data for Stripe API call\nreturn {\n  json: {\n    amount: amount,\n    currency: 'usd',\n    metadata: {\n      packageName: packageName,\n      packageId: packageId\n    },\n    automatic_payment_methods: {\n      enabled: true\n    }\n  }\n};"
+      },
+      "id": "prepare-payment",
+      "name": "Prepare Payment Intent Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.stripe.com/v1/payment_intents",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk_test_YOUR_STRIPE_SECRET_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "amount",
+              "value": "={{ $json.amount }}"
+            },
+            {
+              "name": "currency",
+              "value": "={{ $json.currency }}"
+            },
+            {
+              "name": "automatic_payment_methods[enabled]",
+              "value": "true"
+            },
+            {
+              "name": "metadata[packageName]",
+              "value": "={{ $json.metadata.packageName }}"
+            },
+            {
+              "name": "metadata[packageId]",
+              "value": "={{ $json.metadata.packageId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "stripe-api",
+      "name": "Stripe API - Create Payment Intent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_STRIPE_CREDENTIALS_ID",
+          "name": "Stripe API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"clientSecret\": $json.client_secret } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-payment",
+      "name": "Respond with Payment Intent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare booking data for email and storage\nconst body = $input.item.json.body || $input.item.json;\n\nreturn {\n  json: {\n    name: body.name || 'Not provided',\n    email: body.email || 'Not provided',\n    selectedDate: body.selectedDate || 'Not provided',\n    selectedTime: body.selectedTime || 'Not provided',\n    bookingDateTime: body.bookingDateTime || 'Not provided',\n    package: body.package || 'Not provided',\n    packageId: body.packageId || 'Not provided',\n    packagePrice: body.packagePrice || 'Not provided',\n    paymentIntentId: body.paymentIntentId || 'Not provided',\n    paymentAmount: body.paymentAmount || 'Not provided',\n    paymentStatus: body.paymentStatus || 'pending',\n    timestamp: body.timestamp || new Date().toISOString(),\n    source: body.source || 'Booking Request Form'\n  }\n};"
+      },
+      "id": "prepare-booking",
+      "name": "Prepare Booking Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@utahlegacyfilms.com",
+        "toEmail": "your-email@example.com",
+        "subject": "New Booking Request - {{ $json.package }}",
+        "emailType": "html",
+        "message": "<h2>New Booking Request</h2>\n<p><strong>Name:</strong> {{ $json.name }}</p>\n<p><strong>Email:</strong> {{ $json.email }}</p>\n<p><strong>Package:</strong> {{ $json.package }} ({{ $json.packagePrice }})</p>\n<p><strong>Date & Time:</strong> {{ $json.selectedDate }} at {{ $json.selectedTime }}</p>\n<p><strong>Payment Status:</strong> {{ $json.paymentStatus }}</p>\n<p><strong>Payment Intent ID:</strong> {{ $json.paymentIntentId }}</p>\n<p><strong>Submitted:</strong> {{ $json.timestamp }}</p>",
+        "options": {}
+      },
+      "id": "email-node",
+      "name": "Send Booking Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 400],
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_SMTP_CREDENTIALS_ID",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Booking received successfully\" } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-booking",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Booking Request": {
+      "main": [
+        [
+          {
+            "node": "Check Action Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Action Type": {
+      "main": [
+        [
+          {
+            "node": "Prepare Payment Intent Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Payment Intent Data": {
+      "main": [
+        [
+          {
+            "node": "Stripe API - Create Payment Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe API - Create Payment Intent": {
+      "main": [
+        [
+          {
+            "node": "Respond with Payment Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Send Booking Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Booking Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

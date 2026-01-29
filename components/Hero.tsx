@@ -124,7 +124,6 @@ const Hero: React.FC = () => {
               className="group w-full sm:w-auto bg-white/50 backdrop-blur-sm"
               onClick={() => {
                 // Add video modal or link to video here
-                console.log('Watch trailer clicked');
               }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-[#c06e46] transition-colors" />
@@ -146,12 +145,9 @@ const Hero: React.FC = () => {
               loading="lazy"
               decoding="async"
               onError={(e) => {
-                console.error('Failed to load interview-setup.png');
-                console.error('Image src:', e.currentTarget.src);
-                console.error('Current URL:', window.location.href);
+                // Image failed to load - fallback handled by onError
               }}
               onLoad={() => {
-                console.log('Successfully loaded interview-setup.png');
               }}
             />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20">

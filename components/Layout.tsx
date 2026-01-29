@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { LogoIcon } from './ui/Logo';
 import { Menu, X } from 'lucide-react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/free-questions';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,9 +33,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     e.preventDefault();
     setMobileMenuOpen(false);
     if (targetId) {
-      const element = document.getElementById(targetId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      if (location.pathname !== '/') {
+        // If not on home page, navigate first
+        window.location.href = `/#${targetId}`;
+      } else {
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     }
   };
@@ -53,11 +61,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         aria-label="Main navigation"
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <a 
-            href="#hero" 
+          <Link 
+            to="/"
             className="flex items-center gap-3 group"
             aria-label="Utah Legacy Films - Home"
-            onClick={(e) => handleNavClick(e, 'hero')}
           >
             <div className="relative">
                 <LogoIcon className="w-10 h-10 md:w-12 md:h-12 drop-shadow-sm transition-transform duration-300 group-hover:scale-105" />
@@ -70,38 +77,57 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 Films
                 </span>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <a 
-              href="#value-props" 
-              className="text-[#85756b] hover:text-[#362b24] transition-colors"
-              onClick={(e) => handleNavClick(e, 'value-props')}
-            >
-              Process
-            </a>
-            <a 
-              href="#proof" 
-              className="text-[#85756b] hover:text-[#362b24] transition-colors"
-              onClick={(e) => handleNavClick(e, 'proof')}
-            >
-              Portfolio
-            </a>
-            <a 
-              href="#inquire" 
-              className="text-[#85756b] hover:text-[#362b24] transition-colors"
-              onClick={(e) => handleNavClick(e, 'inquire')}
-            >
-              About Us
-            </a>
-            <a 
-              href="#plans" 
-              className="px-5 py-2.5 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors shadow-lg shadow-[#362b24]/10"
-              onClick={(e) => handleNavClick(e, 'plans')}
-            >
-              Book Now
-            </a>
+            {!isLandingPage ? (
+              <>
+                <a 
+                  href="#value-props" 
+                  className="text-[#85756b] hover:text-[#362b24] transition-colors"
+                  onClick={(e) => handleNavClick(e, 'value-props')}
+                >
+                  Process
+                </a>
+                <a 
+                  href="#proof" 
+                  className="text-[#85756b] hover:text-[#362b24] transition-colors"
+                  onClick={(e) => handleNavClick(e, 'proof')}
+                >
+                  Portfolio
+                </a>
+                <a 
+                  href="#inquire" 
+                  className="text-[#85756b] hover:text-[#362b24] transition-colors"
+                  onClick={(e) => handleNavClick(e, 'inquire')}
+                >
+                  About Us
+                </a>
+                <a 
+                  href="#plans" 
+                  className="px-5 py-2.5 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors shadow-lg shadow-[#362b24]/10"
+                  onClick={(e) => handleNavClick(e, 'plans')}
+                >
+                  Book Now
+                </a>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/"
+                  className="text-[#85756b] hover:text-[#362b24] transition-colors"
+                >
+                  Home
+                </Link>
+                <Link 
+                  to="/#plans"
+                  className="px-5 py-2.5 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors shadow-lg shadow-[#362b24]/10"
+                >
+                  View Packages
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -115,7 +141,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+          {/* Mobile Menu */}
         <div 
           className={`md:hidden fixed inset-0 top-[73px] bg-[#f5f2eb] z-40 transform transition-transform duration-300 ease-in-out ${
             mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
@@ -123,34 +149,55 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           aria-hidden={!mobileMenuOpen}
         >
           <div className="flex flex-col p-6 space-y-6">
-            <a 
-              href="#value-props" 
-              className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
-              onClick={(e) => handleNavClick(e, 'value-props')}
-            >
-              Process
-            </a>
-            <a 
-              href="#proof" 
-              className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
-              onClick={(e) => handleNavClick(e, 'proof')}
-            >
-              Portfolio
-            </a>
-            <a 
-              href="#inquire" 
-              className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
-              onClick={(e) => handleNavClick(e, 'inquire')}
-            >
-              About Us
-            </a>
-            <a 
-              href="#plans" 
-              className="px-6 py-3 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors text-center font-medium"
-              onClick={(e) => handleNavClick(e, 'plans')}
-            >
-              Book Now
-            </a>
+            {!isLandingPage ? (
+              <>
+                <a 
+                  href="#value-props" 
+                  className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
+                  onClick={(e) => handleNavClick(e, 'value-props')}
+                >
+                  Process
+                </a>
+                <a 
+                  href="#proof" 
+                  className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
+                  onClick={(e) => handleNavClick(e, 'proof')}
+                >
+                  Portfolio
+                </a>
+                <a 
+                  href="#inquire" 
+                  className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
+                  onClick={(e) => handleNavClick(e, 'inquire')}
+                >
+                  About Us
+                </a>
+                <a 
+                  href="#plans" 
+                  className="px-6 py-3 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors text-center font-medium"
+                  onClick={(e) => handleNavClick(e, 'plans')}
+                >
+                  Book Now
+                </a>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/"
+                  className="text-lg text-[#362b24] hover:text-[#c06e46] transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link 
+                  to="/#plans"
+                  className="px-6 py-3 bg-[#362b24] text-[#f5f2eb] rounded-full hover:bg-[#2e231e] transition-colors text-center font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  View Packages
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

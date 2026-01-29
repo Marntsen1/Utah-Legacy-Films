@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check } from 'lucide-react';
 import { Reveal } from './ui/Reveal';
+import { sanitizeName, sanitizeEmail, sanitizePhone, sanitizeText, RateLimiter } from '../utils/security';
 
 const CTA: React.FC = () => {
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
@@ -12,17 +13,7 @@ const CTA: React.FC = () => {
     recipient: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone: string): boolean => {
-    if (!phone) return true; // Phone is optional
-    const phoneRegex = /^[\d\s\-\(\)]+$/;
-    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
-  };
+  const rateLimiter = new RateLimiter('cta', 3, 60000); // 3 requests per minute
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -36,25 +27,52 @@ const CTA: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
+    // Rate limiting check
+    if (!rateLimiter.canSubmit()) {
+      const waitTime = Math.ceil(rateLimiter.getTimeUntilNextSubmission() / 1000);
+      setErrors({ submit: `Please wait ${waitTime} seconds before submitting again.` });
+      return;
+    }
+    
+    // Validation and sanitization
     const newErrors: Record<string, string> = {};
     
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+    try {
+      if (!formData.name.trim()) {
+        newErrors.name = 'Name is required';
+      } else {
+        sanitizeName(formData.name); // Validate
+      }
+    } catch (err) {
+      newErrors.name = err instanceof Error ? err.message : 'Invalid name';
     }
     
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    try {
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      } else {
+        sanitizeEmail(formData.email); // Validate
+      }
+    } catch (err) {
+      newErrors.email = err instanceof Error ? err.message : 'Invalid email address';
     }
     
-    if (formData.phone && !validatePhone(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+    try {
+      if (formData.phone) {
+        sanitizePhone(formData.phone); // Validate
+      }
+    } catch (err) {
+      newErrors.phone = err instanceof Error ? err.message : 'Invalid phone number';
     }
     
-    if (!formData.recipient.trim()) {
-      newErrors.recipient = 'Please tell us who this interview is for';
+    try {
+      if (!formData.recipient.trim()) {
+        newErrors.recipient = 'Please tell us who this interview is for';
+      } else {
+        sanitizeText(formData.recipient, 500); // Validate
+      }
+    } catch (err) {
+      newErrors.recipient = err instanceof Error ? err.message : 'Invalid input';
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -68,24 +86,28 @@ const CTA: React.FC = () => {
       // Get webhook URL from environment variable or use fallback
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_CTA || 'https://mattarntsen.app.n8n.cloud/webhook-test/free-questions';
       
-      console.log('CTA Webhook URL:', webhookUrl); // Debug log
-      
       if (!webhookUrl || webhookUrl === 'undefined') {
         throw new Error('Webhook URL not configured');
       }
 
+      // Sanitize all inputs before sending
+      const sanitizedName = sanitizeName(formData.name);
+      const sanitizedEmail = sanitizeEmail(formData.email);
+      const sanitizedPhone = formData.phone ? sanitizePhone(formData.phone) : 'Not provided';
+      const sanitizedRecipient = sanitizeText(formData.recipient, 500);
+
       // Send data to n8n webhook
       const response = await fetch(webhookUrl, {
         method: 'POST',
-        mode: 'cors', // Explicitly enable CORS
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || 'Not provided',
-          recipient: formData.recipient,
+          name: sanitizedName,
+          email: sanitizedEmail,
+          phone: sanitizedPhone,
+          recipient: sanitizedRecipient,
           timestamp: new Date().toISOString(),
           source: 'Free Questions Form',
         }),
@@ -95,14 +117,16 @@ const CTA: React.FC = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      // Record successful submission for rate limiting
+      rateLimiter.recordSubmission();
+      
       setFormState('success');
       // Reset form
       setFormData({ name: '', email: '', phone: '', recipient: '' });
       setErrors({});
     } catch (error) {
-      console.error('Form submission error:', error);
       setFormState('idle');
-      // Show error to user
+      // Don't expose internal error details
       setErrors({ 
         submit: 'Failed to submit. Please try again or contact us directly.' 
       });
@@ -195,6 +219,7 @@ const CTA: React.FC = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
+                      maxLength={100}
                       aria-required="true"
                       aria-invalid={!!errors.name}
                       aria-describedby={errors.name ? "name-error" : undefined}
@@ -224,6 +249,7 @@ const CTA: React.FC = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
+                      maxLength={254}
                       aria-required="true"
                       aria-invalid={!!errors.email}
                       aria-describedby={errors.email ? "email-error" : undefined}
@@ -252,6 +278,7 @@ const CTA: React.FC = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
+                      maxLength={20}
                       aria-invalid={!!errors.phone}
                       aria-describedby={errors.phone ? "phone-error" : undefined}
                       placeholder="Phone number (optional)" 
@@ -279,6 +306,7 @@ const CTA: React.FC = () => {
                       value={formData.recipient}
                       onChange={handleChange}
                       required
+                      maxLength={500}
                       aria-required="true"
                       aria-invalid={!!errors.recipient}
                       aria-describedby={errors.recipient ? "recipient-error" : undefined}
