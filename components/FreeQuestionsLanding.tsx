@@ -153,7 +153,7 @@ const FreeQuestionsLanding: React.FC = () => {
             
             <Reveal delay={0.2} width="100%">
               <p className="text-xl md:text-2xl text-[#85756b] mb-8 max-w-3xl mx-auto leading-relaxed">
-                Get my <strong className="text-[#362b24]">free list of 20 interview questions</strong>—the same ones I use when creating professional legacy films.
+                Get my <strong className="text-[#362b24]">free list of 12 interview questions</strong>—the same ones I use when creating professional legacy films.
               </p>
             </Reveal>
           </div>
@@ -173,7 +173,7 @@ const FreeQuestionsLanding: React.FC = () => {
                 <div className="w-12 h-12 bg-[#c06e46]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                   <Users className="w-6 h-6 text-[#c06e46]" />
                 </div>
-                <h3 className="font-semibold text-[#362b24] mb-2 text-center">20 Essential Questions</h3>
+                <h3 className="font-semibold text-[#362b24] mb-2 text-center">12 Essential Questions</h3>
                 <p className="text-sm text-[#85756b] text-center">From months of legacy film production</p>
               </div>
               
@@ -232,7 +232,7 @@ const FreeQuestionsLanding: React.FC = () => {
                     Get Your Free Questions List
                   </h2>
                   <p className="text-lg text-[#85756b]">
-                    The same 20 questions I use when creating professional legacy films. Refined through months of work.
+                    The same 12 questions I use when creating professional legacy films. Refined through months of work.
                   </p>
                 </div>
 
